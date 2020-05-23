@@ -1,51 +1,210 @@
 <!doctype html>
 <html lang="en">
+
 <head>
-	<meta charset="UTF-8">
-	<title>Document</title>
-	<style>
-		a{
-			text-decoration: none;
-			color: #333;
-		}
-		li{
-			list-style: none;
-		}
-		.banner-wrap{
-			margin: 0 auto;
-			width: 800px;
-			height: 500px;
-		}
+    <meta charset="UTF-8">
+    <title>轮播图实现</title>
+    <style>
+    * {
+        margin: 0;
+        padding: 0;
+    }
+    a {
+        text-decoration: none;
+        color: #333;
+    }
+    li {
+        list-style: none;
+    }
+    .banner-wrap {
+        top: 40px;
+        position: relative;
+        margin: 0 auto;
+        width: 800px;
+        height: 300px;
+    }
 
-		.banner-wrap .swiper{
-			display: flex;
-			width: 100%;
-			height: 100%;
-		}
+    .banner-wrap .swiper {
+        /*把内部元素弹性布局*/
+        display: flex;
+        width: 100%;
+        height: 100%;
+    }
 
-		.banner-wrap .swiper .swiper-item a{
-			display: block;
-			width: 800px;
-			height: 500px;
-		}
-		.red{
-			background-color: red;
-		}
-		.blue{
-			background-color: blue;
-		}
-		.pink{
-			background-color: pink;
-		}
-	</style>
+    .banner-wrap .swiper .swiper-item a {
+        display: block;
+        /*设置a元素宽高，撑起li元素，不能直接操作li元素，父元素是弹性布局，所以li宽度会弹性变化，这样才正确宽度横向排列*/
+        width: 800px;
+        height: 300px;
+    }
+
+    /*项目*/
+    .swiper .swiper-item {
+        transition: opacity .3s;
+    }
+    .red {
+        background-color: red;
+    }
+    .blue {
+        background-color: blue;
+    }
+    .pink {
+        background-color: pink;
+    }
+
+    /*左右箭头*/
+    .banner-wrap .same {
+        position: absolute;
+        top: 50%;
+        width: 30px;
+        height: 40px;
+        line-height: 40px;
+        text-align: center;
+        background-color: rgba(0, 0, 0, .4);
+        color: #fff;
+        margin-top: -20px;
+        cursor: pointer;
+    }
+
+    .left-arrow {
+        left: 30px;
+    }
+    .right-arrow {
+        right: 30px;
+    }
+
+    /*原点指示器*/
+    .indicators {
+        position: absolute;
+        bottom: 20px;
+        left: 50%;
+        margin-left: -10px;
+        height: 14px;
+        line-height: 14px;
+        background-color: rgba(255, 255, 255, .3);
+        border-radius: 10px;
+    }
+
+    .indicators .indicator {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: #fff;
+        cursor: pointer;
+        margin: 3px;
+    }
+
+    /*指示器激活状态*/
+    .indicators .on {
+        background-color: #f50000;
+    }
+    </style>
 </head>
+
 <body>
-	<div class="banner-wrap">
-		<ul class="swiper">
-			<li class="swiper-item red"><a href="#">1</a></li>
-			<li class="swiper-item blue"><a href="#">2</a></li>
-			<li class="swiper-item pink"><a href="#">3</a></li>
-		</ul>
-	</div>
+    <div class="banner-wrap">
+        <ul id="swiper" class="swiper">
+            <li class="swiper-item red"><a href="#">1</a></li>
+            <li class="swiper-item blue"><a href="#">2</a></li>
+            <li class="swiper-item pink"><a href="#">3</a></li>
+        </ul>
+        <div id="left-arrow" class="left-arrow same">
+            <</div> <div id="right-arrow" class="right-arrow same">>
+        </div>
+        <div class="indicators">
+            <div class="indicator on" data-index="0"></div>
+            <div class="indicator" data-index="1"></div>
+            <div class="indicator" data-index="2"></div>
+        </div>
+    </div>
+    <script>
+    window.onload = function() {
+        var swiper = document.getElementById("swiper");
+        var swiperItems = swiper.getElementsByClassName("swiper-item");
+        var leftArrow = document.getElementById("left-arrow");
+        var rightArrow = document.getElementById("right-arrow");
+        var indicators = document.getElementsByClassName("indicator");
+        var index = 0;
+        var timer = null;
+
+        // 设置轮播图默认的透明度和位移
+        function setDefaultStatus() {
+            for (var i = 0; i < swiperItems.length; i++) {
+                if (index == i) {
+                    swiperItems[i].style.opacity = 1;
+                } else {
+                    swiperItems[i].style.opacity = 0;
+                }
+                swiperItems[i].style.transform = "translateX(" + (-i * swiper.offsetWidth) + "px)";
+            }
+
+            for(var k=0;k<indicators.length;k++){
+                indicators[k].onclick = function(){
+                    clearInterval(timer);
+                    var clickIndex = parseInt(this.getAttribute("data-index"));
+                    index = clickIndex;
+                    changeItem();
+                }
+            }
+        }
+        setDefaultStatus();
+
+        function changeItem() {
+            if (index < 0) {
+                index = swiperItems.length - 1;
+            } else if (index >= swiperItems.length) {
+                index = 0;
+            }
+            for (var j = 0; j < swiperItems.length; j++) {
+                swiperItems[j].style.opacity = 0;
+            }
+            swiperItems[index].style.opacity = 1;
+            // 随着item轮换也轮换指示器
+            setInticatorOn();
+        }
+        leftArrow.onclick = function() {
+            clearInterval(timer);
+            index--;
+            changeItem();
+        }
+        rightArrow.onclick = function() {
+            clearInterval(timer);
+            index++;
+            changeItem();
+        }
+
+        function autoChange() {
+            timer = setInterval(function() {
+                index++;
+                changeItem();
+            }, 2000)
+        }
+
+        // 自动播放
+        autoChange();
+
+        // 鼠标经过停止播放
+        swiper.addEventListener("mouseover", function() {
+            clearInterval(timer);
+        }, false)
+
+        // 鼠标移出重新自动播放
+        swiper.addEventListener("mouseout", function() {
+            autoChange()
+        }, false);
+
+        // 自动变换指示器背景颜色
+        function setInticatorOn() {
+            for (var i = 0; i < indicators.length; i++) {
+                // element.classList.remove("on") -> 把某个元素class类的指定的值删除，删除了on值，on就是一个css选择器，里面设置了背景颜色为红色
+                indicators[i].classList.remove("on");
+            }
+            // element.classList.add("on") -> 给某个元素的class中添加指定的值，这个是添加了on值
+            indicators[index].classList.add("on");
+        }
+    }
+    </script>
 </body>
+
 </html>
